@@ -4,10 +4,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 void* worker_code (void* arg);
+void sigHandler(int sigNum);
 
 const int INPUT_SIZE = 50;  // number of characters user can input
+int fileCounter = 0;        // Used to keep track of the number of files accessed.
 
 int main(){
     char input[INPUT_SIZE];
@@ -15,19 +18,24 @@ int main(){
     pthread_t thread1;  // Might need to dynamically make these if we cannot reuse it. TODO 
     int status;
 
-    // Loop through the following 2 steps until user enters in ^C signal, then gracefully shutdown: TODO
-    // Prompt user for filename string
-    printf("\n> ");
-    fgets(input, INPUT_SIZE, stdin);
-   
-    // TODO: Remove this, just testing input
-    printf("Filename: %s\n", input);
+    // Override ^C signal
+    signal(SIGINT, sigHandler);
 
-    
-    // Spawn child thread tell it filename string
-    if (( status = pthread_create (&thread1, NULL, worker_code, &input)) != 0) {
-            fprintf (stderr, "thread create error %d: %s\n", status, strerror(status));
-            exit(1);
+    // Loop through the following 2 steps until user enters in ^C signal, then gracefully shutdown: TODO
+    while(1){
+        // Prompt user for filename string
+        printf("\n> ");
+        fgets(input, INPUT_SIZE, stdin);
+       
+        // TODO: Remove this, just testing input
+        printf("Filename: %s\n", input);
+
+        
+        // Spawn child thread tell it filename string
+        if (( status = pthread_create (&thread1, NULL, worker_code, &input)) != 0) {
+                fprintf (stderr, "thread create error %d: %s\n", status, strerror(status));
+                exit(1);
+        }
     }
 
     // TODO: Remove this, just to test passing filename to thread
@@ -45,6 +53,8 @@ void* worker_code (void* arg){
     srand(time(0));
     int sleepChance = rand() % 5 + 1;       // Random number between 1 and 5
     
+    fileCounter += 1;   // Increment the number of files accessed.
+
     // 80% probability, sleep 1 sec. 
     // The simulates the worker thread found the desired file in the cache and serves it up quickly 
     if( sleepChance < 5 ){
@@ -67,4 +77,9 @@ void* worker_code (void* arg){
 
 
     return arg;
+}
+
+void sigHandler(int sigNum){
+    printf(" recieved.\nThe number of files accessed is %d.\nShutting down now.\n", fileCounter);
+    exit(0);
 }
