@@ -31,27 +31,38 @@ int main(){
     }
 
     // TODO: Remove this, just to test passing filename to thread
-    sleep(2);
+    sleep(11);
 
     return 0;
 }
 
 void* worker_code (void* arg){
+    // TODO: clean up print statements in sleep ifs
+
     char input[INPUT_SIZE];
     strcpy(input, arg);
-    // This function is for the worker thread code
     
-    // Sleep for certain amount of time. 
+    srand(time(0));
+    int sleepChance = rand() % 5 + 1;       // Random number between 1 and 5
+    
     // 80% probability, sleep 1 sec. 
     // The simulates the worker thread found the desired file in the cache and serves it up quickly 
-    // TODO
+    if( sleepChance < 5 ){
+        printf("Sleep Num: %d\n", sleepChance);
+        printf("Sleep for 1 second.\n");
+        sleep(1);
+    }
 
     // 20% probability sleep 7-10 deconds (randomly).
     // This simulates the worker has not found the requested file in cache and must block while it reads from the disk
-    // TODO
+    if( sleepChance == 5 ){
+        printf("Sleep Num: %d\n", sleepChance);
+        int sleepTime = (rand() % (10 - 7)) + 7;     // Generate random number between 7 and 10
+        printf("Sleep for %d second.\n", sleepTime);
+        sleep(sleepTime);
+    }
 
     // TODO: Remove this, just to test passing filename to thread
-    sleep(1);
     printf("Thread Filename: %s\n", input);
 
 
